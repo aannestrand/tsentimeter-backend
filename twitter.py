@@ -41,13 +41,13 @@ def store_tweets():
 	# }
 
 	# The person or entity we are searching
-	topic = "Trump"
+	topic = "Biden"
 
 	# The type of tweet we are searching for: user_tweets, user_mentions
 	search_method = "user_mentions" 
 
 	# Our Twitter search parameters
-	searchQuery = "@realDonaldTrump"
+	searchQuery = "@JoeBiden"
 	retweet_filter = '-filter:retweets'
 	tweetsPerQry = 100
 	q=searchQuery+retweet_filter

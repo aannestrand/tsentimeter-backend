@@ -1,6 +1,6 @@
 # app.py
 from flask import Flask
-from scripts.twitter import store_tweets
+from app.scripts.twitter import store_tweets
 from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)

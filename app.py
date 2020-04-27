@@ -6,7 +6,7 @@ from crontab import CronTab
 app = Flask(__name__)
 
 cron = CronTab(user='username')
-job = cron.new(command='python example1.py')
+job = cron.new(command='python3 /scripts/twitter.py')
 job.minute.every(1)
 cron.write()
 

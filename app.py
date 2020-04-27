@@ -1,13 +1,14 @@
 # app.py
 from flask import Flask
+from scripts.twitter import store_tweets
 from crontab import CronTab
 
-cron.write()
 app = Flask(__name__)
 
-cron = CronTab(user='tweeter')
-job = cron.new(command='python /scripts/twitter.py')
+cron = CronTab(user='username')
+job = cron.new(command='python example1.py')
 job.minute.every(1)
+cron.write()
 
 @app.route("/")
 def hello():

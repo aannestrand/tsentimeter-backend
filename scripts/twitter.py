@@ -70,3 +70,4 @@ def store_tweets():
 			tweets_collection.insert_one(tweet)
 			print("Success")
 
+store_tweets()

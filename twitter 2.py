@@ -41,36 +41,33 @@ def store_tweets():
 	# }
 
 	# The person or entity we are searching
-	topics = ["Biden", "Trump"]
+	topic = "Biden"
 
 	# The type of tweet we are searching for: user_tweets, user_mentions
 	search_method = "user_mentions" 
 
 	# Our Twitter search parameters
-	searchQuerys = ["@JoeBiden", "realDonaldTrump"]
+	searchQuery = "@JoeBiden"
 	retweet_filter = '-filter:retweets'
-	tweetsPerQry = 30
+	tweetsPerQry = 100
+	q=searchQuery+retweet_filter
 
-	for i in range(0,2):
+	# Get the tweets
+	mentions = api.search(q=q, count=tweetsPerQry)
 
-		q=searchQuerys[i]+retweet_filter
+	# Loop throught each tweet and save an entry into database
+	for mention in mentions:
+			tweet = {}
 
-		# Get the tweets
-		mentions = api.search(q=q, count=tweetsPerQry)
+			tweet['topic'] = topic
+			tweet['search_method'] = search_method
+			tweet['date'] = mention._json['created_at']
+			tweet['tweet_id'] = mention._json['id']
+			tweet['tweet'] = mention._json['text']
+			tweet['retweet_count'] = mention.retweet_count
+			tweet['favorite_count'] = mention.favorite_count
 
-		# Loop throught each tweet and save an entry into database
-		for mention in mentions:
-				tweet = {}
-
-				tweet['topic'] = topics[i]
-				tweet['search_method'] = search_method
-				tweet['date'] = mention._json['created_at']
-				tweet['tweet_id'] = mention._json['id']
-				tweet['tweet'] = mention._json['text']
-				tweet['retweet_count'] = mention.retweet_count
-				tweet['favorite_count'] = mention.favorite_count
-
-				tweets_collection.insert_one(tweet)
-				print("Success")
+			tweets_collection.insert_one(tweet)
+			print("Success")
 
 store_tweets()

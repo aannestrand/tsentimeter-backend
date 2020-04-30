@@ -71,6 +71,5 @@ def store_tweets():
 				tweet['favorite_count'] = mention.favorite_count
 
 				tweets_collection.insert_one(tweet)
-				print("Success")
 
 store_tweets()

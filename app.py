@@ -29,11 +29,9 @@ def hello():
 
 # This end point returns all tweets for a given topic
 @app.route("/tweets/topic/<topic>")
-@cross_origin()
 def tweets_topic(topic):
     tweet = db.tweets.find_one({"topic": topic})
     return tweet['tweet_id']
-
 
 if __name__ == '__main__':
     app.run(debug=True)

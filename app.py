@@ -31,7 +31,13 @@ def hello():
 @app.route("/tweets/topic/<topic>")
 def tweets_topic(topic):
     tweet = db.tweets.find_one({"topic": topic})
-    return tweet['tweet_id'], 'OK'
+
+    response = app.response_class(
+        response=tweet,
+        status=200
+    )
+
+    return response
 
 if __name__ == '__main__':
     app.run(debug=True)

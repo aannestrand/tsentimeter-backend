@@ -33,7 +33,7 @@ def tweets_topic(topic):
     tweet = db.tweets.find_one({"topic": topic})
 
     response = app.response_class(
-        response=tweet,
+        response=tweet['tweet_id'],
         status=200
     )
 

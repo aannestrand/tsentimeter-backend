@@ -35,7 +35,7 @@ def tweets_topic(topic):
     tweets = db.tweets.find({"topic": topic})
 
     response = app.response_class(
-        response=json_util.dumps(tweets),
+        response=json_util.dumps(tweets[0]),
         status=200
     )
 

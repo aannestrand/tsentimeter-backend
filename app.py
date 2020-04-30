@@ -4,7 +4,9 @@ from pymongo import MongoClient
 from twitter import store_tweets
 from flask_cors import CORS, cross_origin
 from apscheduler.schedulers.background import BackgroundScheduler
+from bson import json_util 
 import atexit
+import json
 
 # Define our app
 app = Flask(__name__)
@@ -30,10 +32,10 @@ def hello():
 # This end point returns all tweets for a given topic
 @app.route("/tweets/topic/<topic>")
 def tweets_topic(topic):
-    tweet = db.tweets.find_one({"topic": topic})
+    tweets = db.tweets.find({"topic": topic})
 
     response = app.response_class(
-        response=tweet['tweet_id'],
+        response=json_util.dumps(tweets),
         status=200
     )
 

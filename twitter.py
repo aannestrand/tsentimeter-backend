@@ -65,7 +65,7 @@ def store_tweets():
 				tweet['topic'] = topics[i]
 				tweet['search_method'] = search_method
 				tweet['date'] = mention._json['created_at']
-				tweet['tweet_id'] = mention._json['id']
+				tweet['tweet_id'] = str(mention._json['id'])
 				tweet['tweet'] = mention._json['text']
 				tweet['retweet_count'] = mention.retweet_count
 				tweet['favorite_count'] = mention.favorite_count

@@ -205,29 +205,29 @@ def load_dict_contractions():
         }
 
 def get_prob_of_positive_sentiment_from_tweet(tweet):
-    formatted_tweet = tweet.replace('\n', ' ')
-    formatted_tweet = formatted_tweet.replace('\x92',"'")
-    formatted_tweet = ' '.join(re.sub("(@[A-Za-z0-9]+)|(#[A-Za-z0-9]+)", " ", formatted_tweet).split())
-    formatted_tweet = ' '.join(re.sub("(\w+:\/\/\S+)", " ", formatted_tweet).split())
-    formatted_tweet = ' '.join(re.sub("[\.\,\!\?\:\;\-\=]", " ", formatted_tweet).split())
-    formatted_tweet = formatted_tweet.lower()
+    tweet = tweet.replace('\n', ' ')
+    tweet = tweet.replace('\x92',"'")
+    tweet = ' '.join(re.sub("(@[A-Za-z0-9]+)|(#[A-Za-z0-9]+)", " ", tweet).split())
+    tweet = ' '.join(re.sub("(\w+:\/\/\S+)", " ", tweet).split())
+    tweet = ' '.join(re.sub("[\.\,\!\?\:\;\-\=]", " ", tweet).split())
+    tweet = tweet.lower()
     
     CONTRACTIONS = load_dict_contractions()
-    formatted_tweet = formatted_tweet.replace("’","'")
-    words = formatted_tweet.split()
+    tweet = tweet.replace("’","'")
+    words = tweet.split()
     reformed = [CONTRACTIONS[word] if word in CONTRACTIONS else word for word in words]
-    formatted_tweet = " ".join(reformed)
+    tweet = " ".join(reformed)
     
-    formatted_tweet = ''.join(''.join(s)[:2] for _, s in itertools.groupby(formatted_tweet))
+    tweet = ''.join(''.join(s)[:2] for _, s in itertools.groupby(tweet))
     
     SMILEY = load_dict_smileys()  
-    words = formatted_tweet.split()
+    words = tweet.split()
     reformed = [SMILEY[word] if word in SMILEY else word for word in words]
-    formatted_tweet = " ".join(reformed)
+    tweet = " ".join(reformed)
     
-    formatted_tweet = emoji.demojize(formatted_tweet)
-    formatted_tweet = formatted_tweet.replace(":"," ")
-    formatted_tweet = ' '.join(formatted_tweet.split())
+    tweet = emoji.demojize(tweet)
+    tweet = tweet.replace(":"," ")
+    tweet = ' '.join(tweet.split())
       
     pred = model.predict(tweet)
     label, proba = pred
@@ -246,8 +246,8 @@ def get_prob_of_positive_sentiment_from_tweet(tweet):
 
 
 
-print(get_prob_of_positive_sentiment_from_tweet("I am having so much fun. Really. A lot.")
-)
+# print(get_prob_of_positive_sentiment_from_tweet("I am having so much fun. Really. A lot.")
+# )
 
 
 

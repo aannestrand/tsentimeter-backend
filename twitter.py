@@ -1,6 +1,10 @@
 import tweepy
 from pymongo import MongoClient
 import get_sentiment_method
+from testbert import score_tweet
+from transformers import BertTokenizer, BertForSequenceClassification
+import torch
+
 
 CONSUMER_KEY = 'HWfrcgDgiFx4sxyi8mv6fqa0I'
 CONSUMER_SECRET = 'ou7mTUWUwa7n5975DBICIyvWpx4XjgGKc5iYgJqEOj8fom4y3s'
@@ -21,6 +25,12 @@ def connect_mongo ():
 	return db
 
 def store_tweets():
+
+	# Load in our models
+	tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
+	model = BertForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=2, output_attentions=False, output_hidden_states=False)
+	model.load_state_dict(torch.load('model.pt', map_location='cpu'))
+	model.eval()
 
 	# Connect to the Twitter API
 	api = connect_twitter()
@@ -70,8 +80,8 @@ def store_tweets():
 				tweet['tweet'] = mention._json['text']
 				tweet['retweet_count'] = mention.retweet_count
 				tweet['favorite_count'] = mention.favorite_count
-				sentiment = get_sentiment_method.get_prob_of_positive_sentiment_from_tweet(mention._json['text'])
-				tweet['sentiment'] = sentiment
+				sentiment = score_tweet(mention._json['text'], tokenizer, model)
+				tweet['sentiment'] = str(sentiment)
 				print(mention._json['text'])
 				print(sentiment)
 				tweets_collection.insert_one(tweet)

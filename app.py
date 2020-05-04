@@ -8,10 +8,16 @@ from bson import json_util
 import atexit
 import json
 
+
+
 # Define our app
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
+
+# Connect to our database
+client = MongoClient("mongodb+srv://ee461l-blog:trapdungeon@cluster0-1mz2k.mongodb.net/test?retryWrites=true&w=majority")
+db = client['tsentimeter']
 
 # This is our cron job for getting tweets
 scheduler = BackgroundScheduler()
@@ -20,10 +26,6 @@ scheduler.start()
 
 # Shutdown cronjob if process is stopped
 atexit.register(lambda: scheduler.shutdown(wait=False))
-
-# Connect to our database
-client = MongoClient("mongodb+srv://ee461l-blog:trapdungeon@cluster0-1mz2k.mongodb.net/test?retryWrites=true&w=majority")
-db = client['tsentimeter']
 
 @app.route("/")
 def hello():

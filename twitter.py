@@ -1,6 +1,5 @@
 import tweepy
 from pymongo import MongoClient
-import get_sentiment_method
 from testbert import score_tweet
 from transformers import BertTokenizer, BertForSequenceClassification
 import torch

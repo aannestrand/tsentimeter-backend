@@ -98,7 +98,6 @@ def store_tweets(model, tokenizer):
 				print(sentiment)
 				tweets_collection.insert_one(tweet)
 
-store_tweets()
 
 
 

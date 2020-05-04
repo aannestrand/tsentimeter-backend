@@ -7,8 +7,16 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from bson import json_util 
 import atexit
 import json
+from transformers import BertTokenizer, BertForSequenceClassification
+import torch
 
 
+
+# Load in our models
+tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
+model = BertForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=2, output_attentions=False, output_hidden_states=False)
+model.load_state_dict(torch.load('model.pt', map_location='cpu'))
+model.eval()
 
 # Define our app
 app = Flask(__name__)
@@ -21,7 +29,7 @@ db = client['tsentimeter']
 
 # This is our cron job for getting tweets
 scheduler = BackgroundScheduler()
-scheduler.add_job(func=store_tweets, trigger="interval", minutes=10)
+scheduler.add_job(func=lambda:store_tweets(model, tokenizer), trigger="interval", minutes=10)
 scheduler.start()
 
 # Shutdown cronjob if process is stopped

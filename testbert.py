@@ -1,30 +1,37 @@
-import torch
-from transformers import BertTokenizer, BertForSequenceClassification
-
-tokenizer = BertTokenizer.from_pretrained('bert-base-uncased', do_lower_case=True)
-model = BertForSequenceClassification.from_pretrained("bert-base-uncased", num_labels=2, output_attentions=False, output_hidden_states=False)
-model.load_state_dict(torch.load('model.pt', map_location='cpu'))
-model.eval()
+from pymongo import MongoClient
+import requests
+import json
 
 
-def score_tweet(text, tokenizer, model):
+def connect_mongo ():
+	client = MongoClient("mongodb+srv://ee461l-blog:trapdungeon@cluster0-1mz2k.mongodb.net/test?retryWrites=true&w=majority")
+	db = client['tsentimeter']
+	return db
 
-	# Encode the text
-	encoded_dict = tokenizer.encode_plus(text, add_special_tokens = True, max_length=160, pad_to_max_length=True, return_tensors='pt', return_attention_mask=True) 
+def score_database():
+	tweets_collection = connect_mongo().tweets
+	all_tweets = tweets_collection.find({"sentiment": {"$exists": False}})
 
-	# Set the device to CPU
-	device = torch.device('cpu')
-	input_ids = torch.tensor(encoded_dict['input_ids']).to(device)
-	attention_masks = torch.tensor(encoded_dict['attention_mask']).to(device)
+	batch_size = 10
+	tweet_number = 0
+	batch_objects = []
+	batch_tweets = []
 
-	# Get our raw outputs
-	outputs = model(input_ids, token_type_ids=None, attention_mask=attention_masks)[0]
+	for tweet in all_tweets:
+		batch_objects.append(tweet)
+		batch_tweets.append(tweet['tweet'])
+		tweet_number += 1
 
-	# Get the probability of positive sentiment
-	sm = torch.nn.Softmax()
-	probabilities = sm(outputs) 
-	pos_prob = torch.Tensor.cpu(probabilities).detach().numpy()[:,0][0]
-	return pos_prob
+		if (tweet_number % batch_size == 0):
+			resp = requests.post("http://ec2-3-16-150-255.us-east-2.compute.amazonaws.com/predict", json={'data': batch_tweets})
+			scores = resp.json()
+
+			for i in range(0, len(scores)):
+				tweets_collection.update_one({"_id": batch_objects[i]["_id"]}, {"$set": {"sentiment": scores[i]}})
+
+			batch_objects.clear()
+			batch_tweets.clear()
 
 
-score_tweet("Hello frriend", tokenizer, model)
+if __name__ == '__main__':
+	score_database()

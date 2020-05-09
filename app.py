@@ -112,19 +112,17 @@ def tweets_topic_day(topic, year, month, day):
 @app.route("/api/topic/<topic>/sentiment/<sentiment>/<count>")
 def tweets_topic_sentiment_count(topic, sentiment, count):
 
-	print(type(count))
-
 	# If the desired sentiment is positive
-	if (sentiment):
-		tweets = db.tweets.find({"topic": topic, "sentiment": {"$gte": "0.8"}, "qty": count})
+	if (sentiment == "1"):
+		tweets = db.tweets.find({"topic": topic, "sentiment": {"$gte": "0.8"}}).limit(int(count))
 	
 	# If the desired sentiment is negative
 	else:
-		tweets = db.tweets.find({"topic": topic, "sentiment": {"$lte": "0.2"}, "qty": count})
+		tweets = db.tweets.find({"topic": topic, "sentiment": {"$lte": "0.2"}}).limit(int(count))
 
 	tweet_ids = []
 	for tweet in tweets:
-		tweet_ids.append(tweets['tweet_id'])
+		tweet_ids.append(tweet['tweet_id'])
 
 	response = app.response_class(
 		response=json_util.dumps({'tweet_ids': tweet_ids}),

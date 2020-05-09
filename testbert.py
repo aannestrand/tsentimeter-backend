@@ -12,7 +12,7 @@ def score_database():
 	tweets_collection = connect_mongo().tweets
 	all_tweets = tweets_collection.find({"sentiment": {"$exists": False}})
 
-	batch_size = 10
+	batch_size = 7
 	tweet_number = 0
 	batch_objects = []
 	batch_tweets = []

@@ -8,22 +8,7 @@ from bson import json_util
 import atexit
 import json
 from enum import Enum
-
-class Months(Enum):
-	JAN = 1
-	FEB = 2
-	MAR = 3
-	APR = 4
-	MAY = 5
-	JUN = 6
-	JUL = 7
-	AUG = 8
-	SEP = 9
-	OCT = 10
-	NOV = 11
-	DEC = 12
-
-print(Months.DEC)
+from collections import defaultdict, OrderedDict
 
 # Define our app
 app = Flask(__name__)
@@ -47,26 +32,105 @@ atexit.register(lambda: scheduler.shutdown(wait=False))
 def hello():
     return "Hello World!"
 
+
 # This end point returns monthly sentiments for the year
-@app.route("/api/topic/<topic>/<year>")
+@app.route("/api/topic/<topic>/date/<year>")
 def tweets_topic_year(topic, year):
 	# Get all tweets in a year
-	tweets = db.tweets.find({"topic": topic, "date": {"$regex": ".*2020.*"}})
+	tweets = db.tweets.find({"topic": topic, "date": {"$regex": ".*{}.*".format(year)}})
 
-	# We need average sentiment of each month
-	total_sentiment = 0
-	total_tweets = 0
-	dates = []
+	# We need total sentiment of each month
+	total_sentiment = defaultdict(int)
+	total_tweets = defaultdict(int)
 	for tweet in tweets:
-		dates.append(tweet['date'].split()[1])
-		# total_sentiment += tweet['sentiment']
+		total_sentiment[tweet['date'].split()[1]] += float(tweet['sentiment'])
+		total_tweets[tweet['date'].split()[1]] += 1
+
+	# Now we can get the average
+	for month in total_sentiment.keys():
+		total_sentiment[month] /= total_tweets[month]
 
 	response = app.response_class(
-		response=json_util.dumps(dates),
+		response=json_util.dumps({'sentiment': total_sentiment, 'tweets': total_tweets}),
 		status=200
     )
-
 	return response
+
+
+# This end point returns the daily sentiment in a month
+@app.route("/api/topic/<topic>/date/<year>/<month>")
+def tweets_topic_month(topic, year, month):
+	# Get all tweets in a year and month
+	tweets = db.tweets.find({"topic": topic, "date": {"$regex": ".*{}.*".format(year), "$regex": ".*{}.*".format(month)}})
+
+	# We need the total sentiment for each day
+	total_sentiment = defaultdict(int)
+	total_tweets = defaultdict(int)
+	for tweet in tweets:
+		total_sentiment[tweet['date'].split()[2]] += float(tweet['sentiment'])
+		total_tweets[tweet['date'].split()[2]] += 1
+
+	# Now we can get the average
+	for day in total_sentiment.keys():
+		total_sentiment[day] /= total_tweets[day]
+
+	response = app.response_class(
+		response=json_util.dumps({'sentiment': total_sentiment, 'tweets': total_tweets}),
+		status=200
+    )
+	return response
+
+
+# This end point returns the hourly sentiment in a day
+@app.route("/api/topic/<topic>/date/<year>/<month>/<day>")
+def tweets_topic_day(topic, year, month, day):
+	# Get all tweets in a year and month
+	tweets = db.tweets.find({"topic": topic, "date": {"$regex": ".*{}.*".format(year), "$regex": ".*{}.*".format(month), "$regex": ".*{}.*".format(day)}})
+
+	# We need the total sentiment for each hour
+	total_sentiment = defaultdict(int)
+	total_tweets = defaultdict(int)
+	for tweet in tweets:
+		total_sentiment[tweet['date'].split()[3].split(":")[0]] += float(tweet['sentiment'])
+		total_tweets[tweet['date'].split()[3].split(":")[0]] += 1
+
+	# Now we can get the average
+	for hour in total_sentiment.keys():
+		total_sentiment[hour] /= total_tweets[hour]
+
+	total_tweets = OrderedDict(sorted(total_tweets.items()))
+	total_sentiment = OrderedDict(sorted(total_sentiment.items()))
+
+	response = app.response_class(
+		response=json_util.dumps({'sentiment': total_sentiment, 'tweets': total_tweets}),
+		status=200
+    )
+	return response	
+
+
+# This end point returns count amount of tweets for a given topic and sentiment
+@app.route("/api/topic/<topic>/sentiment/<sentiment>/<count>")
+def tweets_topic_sentiment_count(topic, sentiment, count):
+
+	print(type(count))
+
+	# If the desired sentiment is positive
+	if (sentiment):
+		tweets = db.tweets.find({"topic": topic, "sentiment": {"$gte": "0.8"}, "qty": count})
+	
+	# If the desired sentiment is negative
+	else:
+		tweets = db.tweets.find({"topic": topic, "sentiment": {"$lte": "0.2"}, "qty": count})
+
+	tweet_ids = []
+	for tweet in tweets:
+		tweet_ids.append(tweets['tweet_id'])
+
+	response = app.response_class(
+		response=json_util.dumps({'tweet_ids': tweet_ids}),
+		status=200
+    )
+	return response	
 
 
 # This end point returns all tweets for a given topic

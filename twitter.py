@@ -1,5 +1,6 @@
 import tweepy
 from pymongo import MongoClient
+import requests
 
 
 CONSUMER_KEY = 'HWfrcgDgiFx4sxyi8mv6fqa0I'
@@ -20,31 +21,16 @@ def connect_mongo ():
 	db = client['tsentimeter']
 	return db
 
-def score_tweet(text, tokenizer, model):
-
-	# Encode the text
-	encoded_dict = tokenizer.encode_plus(text, add_special_tokens = True, max_length=160, pad_to_max_length=True, return_tensors='pt', return_attention_mask=True) 
-
-	# Set the device to CPU
-	device = torch.device('cpu')
-	input_ids = torch.tensor(encoded_dict['input_ids']).to(device)
-	attention_masks = torch.tensor(encoded_dict['attention_mask']).to(device)
-
-	# Get our raw outputs
-	outputs = model(input_ids, token_type_ids=None, attention_mask=attention_masks)[0]
-
-	# Get the probability of positive sentiment
-	sm = torch.nn.Softmax()
-	probabilities = sm(outputs) 
-	pos_prob = torch.Tensor.cpu(probabilities).detach().numpy()[:,0][0]
-	return pos_prob
+def score_tweet(text):
+	# Score all the mentions
+	resp = requests.post("http://ec2-3-16-150-255.us-east-2.compute.amazonaws.com/predict", json={'data': [text]})
+	scores = resp.json()
+	return scores[0]
 
 
-def store_tweets(model, tokenizer):
-
-
-
+def store_tweets():
 	# Connect to the Twitter API
+	print("Connecting")
 	api = connect_twitter()
 
 	# Connect to the Data Base
@@ -64,22 +50,24 @@ def store_tweets(model, tokenizer):
 	# }
 
 	# The person or entity we are searching
-	topics = ["Biden", "Trump"]
+	topics = ["Biden", "Trump", "ElonMusk", "CNN", "FoxNews"]
 
 	# The type of tweet we are searching for: user_tweets, user_mentions
 	search_method = "user_mentions" 
 
 	# Our Twitter search parameters
-	searchQuerys = ["@JoeBiden", "@realDonaldTrump"]
+	searchQuerys = ["@JoeBiden", "@realDonaldTrump", "@elonmusk", "@CNN", "@FoxNews"]
 	retweet_filter = '-filter:retweets'
-	tweetsPerQry = 10
+	tweetsPerQry = 15
 
-	for i in range(0,2):
+	for i in range(0,len(searchQuerys)):
 
 		q=searchQuerys[i]+retweet_filter
 
 		# Get the tweets
 		mentions = api.search(q=q, count=tweetsPerQry)
+
+
 
 		# Loop throught each tweet and save an entry into database
 		for mention in mentions:
@@ -92,11 +80,11 @@ def store_tweets(model, tokenizer):
 				tweet['tweet'] = mention._json['text']
 				tweet['retweet_count'] = mention.retweet_count
 				tweet['favorite_count'] = mention.favorite_count
-				sentiment = score_tweet(mention._json['text'], tokenizer, model)
+
+				sentiment = score_tweet(mention._json['text'])
 				tweet['sentiment'] = str(sentiment)
-				print(mention._json['text'])
-				print(sentiment)
 				tweets_collection.insert_one(tweet)
+				print("saved")
 
 
 

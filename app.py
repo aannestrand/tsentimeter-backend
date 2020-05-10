@@ -56,8 +56,8 @@ def tweets_topic_year(topic, year):
 		arr = {"month": month, "sentiment": total_sentiment[month], "total_tweets": total_tweets[month]}
 		sentiments.append(arr)
 
-	sentiments = json_util.dumps(sentiments)
-	return jsonify(sentiments)
+	final = {"sentiments": sentiments}
+	return jsonify(final)
 
 
 # This end point returns the daily sentiment in a month

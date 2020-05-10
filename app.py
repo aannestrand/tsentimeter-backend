@@ -1,5 +1,5 @@
 # app.py
-from flask import Flask
+from flask import Flask, jsonify
 from pymongo import MongoClient
 from twitter import store_tweets
 from flask_cors import CORS, cross_origin
@@ -50,11 +50,14 @@ def tweets_topic_year(topic, year):
 	for month in total_sentiment.keys():
 		total_sentiment[month] /= total_tweets[month]
 
-	response = app.response_class(
-		response=json_util.dumps({'sentiment': total_sentiment, 'tweets': total_tweets}),
-		status=200
-    )
-	return response
+	# 
+	sentiments = []
+	for month in total_sentiment.keys():
+		arr = {"month": month, "sentiment": total_sentiment[month], "total_tweets": total_tweets[month]}
+		sentiments.append(arr)
+
+	sentiments = json_util.dumps(sentiments)
+	return jsonify(sentiments)
 
 
 # This end point returns the daily sentiment in a month

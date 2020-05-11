@@ -50,7 +50,7 @@ def tweets_topic_year(topic, year):
 	for month in total_sentiment.keys():
 		total_sentiment[month] /= total_tweets[month]
 
-	# 
+	# Aggregate everything
 	sentiments = []
 	for month in total_sentiment.keys():
 		arr = {"month": month, "sentiment": total_sentiment[month], "total_tweets": total_tweets[month]}
@@ -77,12 +77,14 @@ def tweets_topic_month(topic, year, month):
 	for day in total_sentiment.keys():
 		total_sentiment[day] /= total_tweets[day]
 
-	response = app.response_class(
-		response=json_util.dumps({'sentiment': total_sentiment, 'tweets': total_tweets}),
-		status=200
-    )
-	return response
+	# Aggregate everything
+	sentiments = []
+	for day in total_sentiment.keys():
+		arr = {"day": day, "sentiment": total_sentiment[day], "total_tweets": total_tweets[day]}
+		sentiments.append(arr)
 
+	final = {"sentiments": sentiments}
+	return jsonify(final)
 
 # This end point returns the hourly sentiment in a day
 @app.route("/api/topic/<topic>/date/<year>/<month>/<day>")
@@ -104,12 +106,14 @@ def tweets_topic_day(topic, year, month, day):
 	total_tweets = OrderedDict(sorted(total_tweets.items()))
 	total_sentiment = OrderedDict(sorted(total_sentiment.items()))
 
-	response = app.response_class(
-		response=json_util.dumps({'sentiment': total_sentiment, 'tweets': total_tweets}),
-		status=200
-    )
-	return response	
+	# Aggregate everything
+	sentiments = []
+	for hour in total_sentiment.keys():
+		arr = {"hour": hour, "sentiment": total_sentiment[hour], "total_tweets": total_tweets[hour]}
+		sentiments.append(arr)
 
+	final = {"sentiments": sentiments}
+	return jsonify(final)
 
 # This end point returns count amount of tweets for a given topic and sentiment
 @app.route("/api/topic/<topic>/sentiment/<sentiment>/<count>")
@@ -117,21 +121,28 @@ def tweets_topic_sentiment_count(topic, sentiment, count):
 
 	# If the desired sentiment is positive
 	if (sentiment == "1"):
-		tweets = db.tweets.find({"topic": topic, "sentiment": {"$gte": "0.8"}}).limit(int(count))
-	
+		tweets = db.tweets.aggregate([ 
+		    { "$match":  {"topic": topic} }, 
+			{ "$match": {"sentiment": {"$gte": "0.8"}}},
+        	{ "$sample": {"size": int(count)}},
+      	])
+
 	# If the desired sentiment is negative
 	else:
-		tweets = db.tweets.find({"topic": topic, "sentiment": {"$lte": "0.2"}}).limit(int(count))
+		tweets = db.tweets.aggregate([ 
+		    { "$match":  {"topic": topic} }, 
+			{ "$match": {"sentiment": {"$lte": "0.2"}}},
+        	{ "$sample": {"size": int(count)}},
+      	])
 
+	# Aggregate everything
 	tweet_ids = []
 	for tweet in tweets:
-		tweet_ids.append(tweet['tweet_id'])
+		arr = {"tweet_id": tweet['tweet_id']}
+		tweet_ids.append(arr)
 
-	response = app.response_class(
-		response=json_util.dumps({'tweet_ids': tweet_ids}),
-		status=200
-    )
-	return response	
+	final = {"sentiments": tweet_ids}
+	return jsonify(final)
 
 
 # This end point returns all tweets for a given topic

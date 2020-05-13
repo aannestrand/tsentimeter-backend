@@ -63,7 +63,6 @@ def tweets_topic_year(topic, year):
 # This end point returns the daily sentiment in a month
 @app.route("/api/topic/<topic>/date/<year>/<month>")
 def tweets_topic_month(topic, year, month):
-	print(year, month)
 	# Get all tweets in a year and month
 	tweets = db.tweets.find({"$and": [{"topic": topic}, {"date": {"$regex": ".*{}.*".format(year)}}, {"date": {"$regex": ".*{}.*".format(month)}}]})
 
@@ -71,7 +70,6 @@ def tweets_topic_month(topic, year, month):
 	total_sentiment = defaultdict(int)
 	total_tweets = defaultdict(int)
 	for tweet in tweets:
-		print(tweet['date'])
 		total_sentiment[tweet['date'].split()[2]] += float(tweet['sentiment'])
 		total_tweets[tweet['date'].split()[2]] += 1
 

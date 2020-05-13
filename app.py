@@ -37,7 +37,7 @@ def hello():
 @app.route("/api/topic/<topic>/date/<year>")
 def tweets_topic_year(topic, year):
 	# Get all tweets in a year
-	tweets = db.tweets.find({"topic": topic, "date": {"$regex": ".*{}.*".format(year)}})
+	tweets = db.tweets.find({"$and": [{"topic": topic}, {"date": {"$regex": ".*{}.*".format(year)}}]})
 
 	# We need total sentiment of each month
 	total_sentiment = defaultdict(int)
@@ -63,13 +63,15 @@ def tweets_topic_year(topic, year):
 # This end point returns the daily sentiment in a month
 @app.route("/api/topic/<topic>/date/<year>/<month>")
 def tweets_topic_month(topic, year, month):
+	print(year, month)
 	# Get all tweets in a year and month
-	tweets = db.tweets.find({"topic": topic, "date": {"$regex": ".*{}.*".format(year), "$regex": ".*{}.*".format(month)}})
+	tweets = db.tweets.find({"$and": [{"topic": topic}, {"date": {"$regex": ".*{}.*".format(year)}}, {"date": {"$regex": ".*{}.*".format(month)}}]})
 
 	# We need the total sentiment for each day
 	total_sentiment = defaultdict(int)
 	total_tweets = defaultdict(int)
 	for tweet in tweets:
+		print(tweet['date'])
 		total_sentiment[tweet['date'].split()[2]] += float(tweet['sentiment'])
 		total_tweets[tweet['date'].split()[2]] += 1
 
@@ -90,7 +92,7 @@ def tweets_topic_month(topic, year, month):
 @app.route("/api/topic/<topic>/date/<year>/<month>/<day>")
 def tweets_topic_day(topic, year, month, day):
 	# Get all tweets in a year and month
-	tweets = db.tweets.find({"topic": topic, "date": {"$regex": ".*{}.*".format(year), "$regex": ".*{}.*".format(month), "$regex": ".*{}.*".format(day)}})
+	tweets = db.tweets.find({"$and": [{"topic": topic}, {"date": {"$regex": ".*{}.*".format(year)}}, {"date": {"$regex": ".*{}.*".format(month)}}, {"date": {"$regex": ".*{}.*".format(day)}}]})
 
 	# We need the total sentiment for each hour
 	total_sentiment = defaultdict(int)

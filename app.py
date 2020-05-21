@@ -117,8 +117,12 @@ def tweets_topic_sentiment_count(topic, sentiment, count):
 		tweets = db.tweets.find({"topic": topic, "sentiment": {"$gte": "0.8"}}).limit(int(count))
 	
 	# If the desired sentiment is negative
-	else:
+	elif (sentiment == "0"):
 		tweets = db.tweets.find({"topic": topic, "sentiment": {"$lte": "0.2"}}).limit(int(count))
+
+	# If the desired sentiment is neutral
+	elif (sentiment == "2"):
+		tweets = db.tweets.find({"topic": topic, "sentiment": {'$gte':"0.4", '$lte':"0.6"}}).limit(int(count))
 
 	tweet_ids = []
 	for tweet in tweets:

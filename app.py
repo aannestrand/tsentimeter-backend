@@ -135,7 +135,7 @@ def tweets_topic_sentiment_count(topic, sentiment, count):
         	{ "$sample": {"size": int(count)}},
       	])
 
-	# If the desired sentiment is negative
+	# If the desired sentiment is neutral
 	elif (sentiment == "2"):
 		tweets = db.tweets.aggregate([ 
 		    { "$match":  {"topic": topic} }, 
